@@ -1,0 +1,291 @@
+<Window x:Class="NOR.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="NŌR Studio - Dynamic Live Wallpaper Engine"
+        Width="1050" Height="680"
+        MinWidth="900" MinHeight="580"
+        WindowStartupLocation="CenterScreen"
+        Background="#0B0E14"
+        Foreground="#ECEFF4"
+        Icon="Assets/app.ico">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!-- Left Sidebar: Gallery -->
+            <ColumnDefinition Width="340" MinWidth="280" MaxWidth="440" />
+            <!-- Divider -->
+            <ColumnDefinition Width="1" />
+            <!-- Right Pane: Preview & Engine Controls -->
+            <ColumnDefinition Width="*" MinWidth="520" />
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT SIDEBAR: GALLERY -->
+        <Border Grid.Column="0" Background="#11151E" BorderBrush="#1F2533" BorderThickness="0,0,1,0">
+            <Grid Margin="18">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Image Source="Assets/logo.png" Width="36" Height="36" Margin="0,0,12,0" />
+                            <StackPanel VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="NŌR" FontSize="18" FontWeight="Bold" Foreground="#F8FAFC" />
+                                    <Border Background="#1E293B" CornerRadius="10" Padding="6,2" Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock x:Name="TxtWallpaperCount" Text="0" FontSize="11" FontWeight="Bold" Foreground="#94A3B8" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Windows Studio" FontSize="11" Foreground="#64748B" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Import Button -->
+                <Button Grid.Row="1" Content="+ Import Media File"
+                        Height="38" Margin="0,0,0,16"
+                        Background="#2563EB" Foreground="#FFFFFF"
+                        BorderThickness="0" FontWeight="SemiBold" FontSize="13"
+                        Click="BtnImport_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="8" />
+                        </Style>
+                    </Button.Resources>
+                </Button>
+
+                <!-- Gallery Items List -->
+                <ListBox Grid.Row="2" x:Name="LstGallery"
+                         Background="Transparent" BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         SelectionChanged="LstGallery_SelectionChanged">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,0,0,10" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="#171C26" BorderBrush="#252C3B" BorderThickness="1"
+                                    CornerRadius="10" Padding="12" Margin="0,0,0,6" Cursor="Hand">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Thumbnail Placeholder -->
+                                    <Border Grid.Column="0" Width="68" Height="48" CornerRadius="6"
+                                            Background="#0E121A" BorderBrush="#2A3242" BorderThickness="1"
+                                            Margin="0,0,12,0" ClipToBounds="True">
+                                        <Grid>
+                                            <TextBlock Text="▶" Foreground="#3B82F6" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <Border Background="#CC000000" CornerRadius="4" Padding="3,1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="3">
+                                                <TextBlock Text="{Binding DurationDescription}" FontSize="9" FontWeight="Bold" Foreground="#FFFFFF" />
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Info -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding FileName}" FontSize="13" FontWeight="SemiBold" Foreground="#F1F5F9"
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="150" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                            <Border Background="#1E293B" CornerRadius="4" Padding="4,1" Margin="0,0,6,0">
+                                                <TextBlock Text="{Binding OriginalFormat}" FontSize="10" FontWeight="Bold" Foreground="#60A5FA" />
+                                            </Border>
+                                            <TextBlock Text="{Binding FileSizeString}" FontSize="11" Foreground="#64748B" />
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Action -->
+                                    <Button Grid.Column="2" Content="✕" Width="26" Height="26"
+                                            Background="Transparent" Foreground="#64748B" BorderThickness="0"
+                                            Tag="{Binding}" Click="BtnDeleteWallpaper_Click"
+                                            VerticalAlignment="Center" ToolTip="Remove from Gallery" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!-- RIGHT PANE: PREVIEW & ENGINE -->
+        <Grid Grid.Column="2" Margin="24">
+            <Grid.RowDefinitions>
+                <!-- Title & Status Pill -->
+                <RowDefinition Height="Auto" />
+                <!-- Preview Canvas -->
+                <RowDefinition Height="*" MinHeight="240" />
+                <!-- Playback Scrubber & Volume -->
+                <RowDefinition Height="Auto" />
+                <!-- Action Controls -->
+                <RowDefinition Height="Auto" />
+                <!-- Settings & Power Management -->
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Status Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock x:Name="TxtSelectedTitle" Text="No Media Selected" FontSize="18" FontWeight="Bold" Foreground="#F8FAFC" />
+                </StackPanel>
+
+                <Border x:Name="PillStatus" HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Background="#1E293B" CornerRadius="12" Padding="10,4">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="IndicatorDot" Width="8" Height="8" Fill="#64748B" Margin="0,0,6,0" VerticalAlignment="Center" />
+                        <TextBlock x:Name="TxtStatus" Text="Desktop: Idle" FontSize="11" FontWeight="SemiBold" Foreground="#94A3B8" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- In-App Video Preview Player -->
+            <Border Grid.Row="1" Background="#07090E" CornerRadius="12" BorderBrush="#1F2533" BorderThickness="1" ClipToBounds="True">
+                <Grid>
+                    <MediaElement x:Name="PreviewPlayer"
+                                  LoadedBehavior="Manual"
+                                  UnloadedBehavior="Manual"
+                                  ScrubbingEnabled="True"
+                                  Stretch="Uniform"
+                                  MediaEnded="PreviewPlayer_MediaEnded"
+                                  MediaOpened="PreviewPlayer_MediaOpened" />
+
+                    <!-- Overlay Placeholder if nothing is playing -->
+                    <StackPanel x:Name="PlaceholderPanel" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="🎬" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,10" />
+                        <TextBlock Text="Select a wallpaper from the left gallery to preview"
+                                   FontSize="13" Foreground="#64748B" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Preview Scrubber & Sound Controls -->
+            <Grid Grid.Row="2" Margin="0,12,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="140" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Play/Pause Preview -->
+                <Button Grid.Column="0" x:Name="BtnPreviewPlayPause" Content="▶" Width="36" Height="30"
+                        Background="#1E232E" Foreground="#FFFFFF" BorderThickness="0" Margin="0,0,12,0"
+                        Click="BtnPreviewPlayPause_Click" />
+
+                <!-- Scrubber Slider -->
+                <Slider Grid.Column="1" x:Name="SliderScrubber" VerticalAlignment="Center"
+                        Minimum="0" Maximum="100" Value="0"
+                        ValueChanged="SliderScrubber_ValueChanged" />
+
+                <!-- Time Label -->
+                <TextBlock Grid.Column="2" x:Name="TxtTime" Text="0:00 / 0:00"
+                           FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" Margin="12,0,16,0" />
+
+                <!-- Preview Volume -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnMutePreview" Content="🔊" Width="28" Height="28"
+                            Background="Transparent" Foreground="#94A3B8" BorderThickness="0"
+                            Click="BtnMutePreview_Click" Margin="0,0,4,0" />
+                    <Slider x:Name="SliderPreviewVolume" Width="90" Minimum="0" Maximum="1" Value="0.8"
+                            VerticalAlignment="Center" ValueChanged="SliderPreviewVolume_ValueChanged" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Primary Action Bar -->
+            <Grid Grid.Row="3" Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                    <Button x:Name="BtnSetDesktop" Content="★ Set as Desktop Wallpaper"
+                            Height="38" Padding="18,0"
+                            Background="#2563EB" Foreground="#FFFFFF"
+                            BorderThickness="0" FontWeight="Bold" FontSize="13"
+                            Click="BtnSetDesktop_Click" />
+
+                    <Button x:Name="BtnPauseResumeDesktop" Content="⏸ Pause Desktop"
+                            Height="38" Padding="14,0"
+                            Background="#1E2533" Foreground="#E2E8F0"
+                            BorderBrush="#2B3448" BorderThickness="1" FontSize="12"
+                            Click="BtnPauseResumeDesktop_Click" />
+
+                    <Button x:Name="BtnStopDesktop" Content="⏹ Stop Desktop"
+                            Height="38" Padding="14,0"
+                            Background="#1E2533" Foreground="#EF4444"
+                            BorderBrush="#2B3448" BorderThickness="1" FontSize="12"
+                            Click="BtnStopDesktop_Click" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Content="✂️ Trim" Height="38" Padding="12,0"
+                            Background="#171C26" Foreground="#E2E8F0"
+                            BorderBrush="#2B3448" BorderThickness="1" FontSize="12"
+                            Click="BtnTrim_Click" />
+
+                    <Button Content="📐 Crop" Height="38" Padding="12,0"
+                            Background="#171C26" Foreground="#E2E8F0"
+                            BorderBrush="#2B3448" BorderThickness="1" FontSize="12"
+                            Click="BtnCrop_Click" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Intelligent Power & Audio Management Card -->
+            <Border Grid.Row="4" Background="#11151E" CornerRadius="10" BorderBrush="#1F2533" BorderThickness="1" Padding="16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="220" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Spacing="8">
+                        <TextBlock Text="⚡ Intelligent Power &amp; Audio Management" FontSize="13" FontWeight="Bold" Foreground="#F8FAFC" />
+                        
+                        <CheckBox x:Name="ChkPauseFullScreen"
+                                  Content="Zero-Drain Full-Screen Suspension (Freezes decoding to 0% GPU/CPU during games and presentations)"
+                                  IsChecked="True" Foreground="#CBD5E1" FontSize="11"
+                                  Checked="ChkPauseFullScreen_Changed" Unchecked="ChkPauseFullScreen_Changed" />
+
+                        <CheckBox x:Name="ChkAutoMute"
+                                  Content="Context-Aware Audio Ducking (Auto-mutes wallpaper sound when working in apps)"
+                                  IsChecked="True" Foreground="#CBD5E1" FontSize="11"
+                                  Checked="ChkAutoMute_Changed" Unchecked="ChkAutoMute_Changed" />
+
+                        <CheckBox x:Name="ChkStartup"
+                                  Content="Launch NŌR at Windows Startup"
+                                  Foreground="#CBD5E1" FontSize="11"
+                                  Checked="ChkStartup_Changed" Unchecked="ChkStartup_Changed" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0">
+                        <TextBlock Text="Desktop Master Volume" FontSize="11" Foreground="#94A3B8" Margin="0,0,0,6" />
+                        <Slider x:Name="SliderDesktopVolume" Minimum="0" Maximum="1" Value="1.0"
+                                ValueChanged="SliderDesktopVolume_ValueChanged" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
+

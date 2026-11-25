@@ -1,0 +1,41 @@
+<Application x:Class="NOR.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <!-- Dark Theme Global Resources -->
+        <Color x:Key="BackgroundDark">#0B0E14</Color>
+        <Color x:Key="SurfaceDark">#11151E</Color>
+        <Color x:Key="CardDark">#171C26</Color>
+        <Color x:Key="AccentBlue">#2563EB</Color>
+        <Color x:Key="AccentBlueHover">#1D4ED8</Color>
+        <Color x:Key="TextPrimary">#F8FAFC</Color>
+        <Color x:Key="TextSecondary">#94A3B8</Color>
+
+        <!-- Modern Dark Button Style -->
+        <Style TargetType="Button">
+            <Setter Property="FontFamily" Value="Segoe UI, -apple-system, BlinkMacSystemFont, Roboto" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Slider Theme -->
+        <Style TargetType="Slider">
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </Application.Resources>
+</Application>
+

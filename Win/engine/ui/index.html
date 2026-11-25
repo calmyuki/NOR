@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NŌR Studio - Dynamic Live Wallpaper Engine</title>
+    <style>
+        :root {
+            --bg-base: #0B0E14;
+            --bg-sidebar: #11151E;
+            --bg-card: #181D28;
+            --bg-card-hover: #1F2533;
+            --border: #232936;
+            --border-focus: #3B82F6;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+            --accent: #2563EB;
+            --accent-hover: #1D4ED8;
+            --accent-light: #60A5FA;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 340px;
+            min-width: 300px;
+            max-width: 400px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 18px;
+            gap: 16px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .brand-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .badge-count {
+            background: #1E293B;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .btn-import {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-import:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+        }
+
+        .gallery {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 4px;
+        }
+
+        .gallery::-webkit-scrollbar {
+            width: 6px;
+        }
+        .gallery::-webkit-scrollbar-thumb {
+            background: #252C3B;
+            border-radius: 4px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: #333C4E;
+        }
+
+        .card.selected {
+            border-color: var(--accent-light);
+            background: #1D2331;
+            box-shadow: 0 0 0 1px var(--accent-light);
+        }
+
+        .card.active-desktop::before {
+            content: "ACTIVE";
+            position: absolute;
+            top: -6px;
+            right: 12px;
+            background: var(--success);
+            color: #000;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .card-thumb {
+            width: 68px;
+            height: 48px;
+            border-radius: 6px;
+            background: #0E121A;
+            border: 1px solid #2A3242;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-light);
+            font-size: 16px;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-thumb-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            background: rgba(0,0,0,0.75);
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 3px;
+            color: #FFF;
+        }
+
+        .card-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .chip {
+            background: #1E293B;
+            color: var(--accent-light);
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        .card-size {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .btn-card-delete {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: color 0.15s;
+        }
+
+        .btn-card-delete:hover {
+            color: var(--danger);
+        }
+
+        /* MAIN CONTENT PANE */
+        .main-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .selected-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .status-pill {
+            background: #1E293B;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        .status-dot.active {
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        .status-dot.paused {
+            background: var(--warning);
+            box-shadow: 0 0 8px var(--warning);
+        }
+
+        /* PREVIEW PLAYER */
+        .preview-container {
+            flex: 1;
+            min-height: 280px;
+            max-height: 480px;
+            background: #07090E;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .placeholder-text {
+            color: var(--text-muted);
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* CONTROLS BAR */
+        .playback-controls {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            padding: 10px 16px;
+            border-radius: 10px;
+        }
+
+        .btn-ctrl {
+            background: #1E232E;
+            color: white;
+            border: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .btn-ctrl:hover {
+            background: #2B3242;
+        }
+
+        .scrubber-bar {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent-light);
+            cursor: pointer;
+            height: 5px;
+        }
+
+        .time-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .volume-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 120px;
+        }
+
+        /* PRIMARY ACTIONS */
+        .actions-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .action-group-left {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 11px 22px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: #1E2533;
+            color: var(--text-primary);
+            border: 1px solid #2B3448;
+            padding: 11px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-secondary:hover {
+            background: #273042;
+        }
+
+        .btn-danger {
+            color: var(--danger);
+        }
+
+        /* SETTINGS CARD */
+        .settings-card {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .settings-left {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .settings-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .toggle-label input[type="checkbox"] {
+            accent-color: var(--accent);
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+        }
+
+        .settings-right {
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .settings-right-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LEFT SIDEBAR -->
+    <div class="sidebar">
+        <div class="header">
+            <div class="brand">
+                <img src="/api/logo" class="brand-logo" alt="NŌR" onerror="this.style.display='none'">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="brand-title">NŌR</span>
+                        <span class="badge-count" id="countBadge">0</span>
+                    </div>
+                    <div class="brand-subtitle">Dynamic Wallpaper Studio</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-import" onclick="importMedia()">
+            <span>＋</span> Import Media File
+        </button>
+
+        <div class="gallery" id="galleryList">
+            <!-- Dynamically populated wallpaper cards -->
+        </div>
+    </div>
+
+    <!-- MAIN PANE -->
+    <div class="main-pane">
+        <div class="top-bar">
+            <div class="selected-title" id="selectedTitle">No Media Selected</div>
+            <div class="status-pill">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Desktop: Idle</span>
+            </div>
+        </div>
+
+        <!-- Video Preview -->
+        <div class="preview-container">
+            <video id="previewVideo" loop playsinline></video>
+            <div class="placeholder-text" id="placeholder">
+                <span style="font-size: 38px;">🎬</span>
+                <span>Select or import a wallpaper from the gallery to preview</span>
+            </div>
+        </div>
+
+        <!-- Scrubber & Preview Volume -->
+        <div class="playback-controls">
+            <button class="btn-ctrl" id="btnPlayPause" onclick="togglePreviewPlay()">▶</button>
+            <div class="scrubber-bar">
+                <input type="range" id="scrubber" min="0" max="100" value="0" oninput="onScrub(this.value)">
+                <span class="time-label" id="timeLabel">0:00 / 0:00</span>
+            </div>
+            <div class="volume-box">
+                <button class="btn-ctrl" id="btnPreviewMute" onclick="togglePreviewMute()">🔊</button>
+                <input type="range" id="previewVolume" min="0" max="1" step="0.05" value="0.8" oninput="setPreviewVolume(this.value)">
+            </div>
+        </div>
+
+        <!-- Primary Actions -->
+        <div class="actions-bar">
+            <div class="action-group-left">
+                <button class="btn-primary" onclick="setAsDesktop()">★ Set as Desktop Wallpaper</button>
+                <button class="btn-secondary" id="btnPauseDesktop" onclick="toggleDesktopPause()">⏸ Pause Desktop</button>
+                <button class="btn-secondary btn-danger" onclick="stopDesktop()">⏹ Stop Desktop</button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-secondary" onclick="alert('Trimmer dialog: Adjust video loop markers non-destructively.')">✂️ Trim Loop</button>
+                <button class="btn-secondary" onclick="alert('Cropper: 16:9, 16:10, and 21:9 Ultrawide auto-fit active.')">📐 Aspect Crop</button>
+            </div>
+        </div>
+
+        <!-- Power & Settings -->
+        <div class="settings-card">
+            <div class="settings-left">
+                <div class="settings-title">⚡ Intelligent Power & Audio Management</div>
+                <label class="toggle-label">
+                    <input type="checkbox" id="chkFullscreen" checked onchange="updateSettings()">
+                    <span>Zero-Drain Fullscreen Suspension (Freezes decoding to 0% GPU/CPU during games)</span>
+                </label>
+                <label class="toggle-label">
+                    <input type="checkbox" id="chkAutoMute" checked onchange="updateSettings()">
+                    <span>Context-Aware Audio Ducking (Auto-mutes wallpaper sound when working in apps)</span>
+                </label>
+                <label class="toggle-label">
+                    <input type="checkbox" id="chkStartup" onchange="updateSettings()">
+                    <span>Launch NŌR at Windows Startup</span>
+                </label>
+            </div>
+
+            <div class="settings-right">
+                <div class="settings-right-label">Desktop Master Volume</div>
+                <input type="range" id="desktopVolume" min="0" max="1000" value="800" oninput="setDesktopVolume(this.value)">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let items = [];
+        let selectedItem = null;
+        let isDesktopActive = false;
+        let isDesktopPaused = false;
+        const video = document.getElementById('previewVideo');
+        const scrubber = document.getElementById('scrubber');
+        const timeLabel = document.getElementById('timeLabel');
+        const placeholder = document.getElementById('placeholder');
+
+        async function fetchStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                isDesktopActive = data.is_active;
+                isDesktopPaused = data.is_paused;
+                document.getElementById('chkFullscreen').checked = data.pause_on_fullscreen;
+                document.getElementById('chkStartup').checked = data.start_at_login;
+                document.getElementById('desktopVolume').value = data.volume;
+                updateStatusUI();
+                renderGallery();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function fetchGallery() {
+            try {
+                const res = await fetch('/api/gallery');
+                items = await res.json() || [];
+                document.getElementById('countBadge').innerText = items.length;
+                renderGallery();
+                if (items.length > 0 && !selectedItem) {
+                    selectItem(items[0]);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderGallery() {
+            const list = document.getElementById('galleryList');
+            list.innerHTML = '';
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `card ${selectedItem && selectedItem.id === item.id ? 'selected' : ''} ${item.is_active ? 'active-desktop' : ''}`;
+                card.onclick = () => selectItem(item);
+
+                card.innerHTML = `
+                    <div class="card-thumb">
+                        <span>▶</span>
+                        <div class="card-thumb-badge">${item.duration || '0:15'}</div>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title">${item.name}</div>
+                        <div class="card-meta">
+                            <span class="chip">${item.format || 'MP4'}</span>
+                            <span class="card-size">${item.size || '12 MB'}</span>
+                        </div>
+                    </div>
+                    <button class="btn-card-delete" title="Remove" onclick="deleteItem(event, '${item.id}')">✕</button>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function selectItem(item) {
+            selectedItem = item;
+            document.getElementById('selectedTitle').innerText = item.name;
+            placeholder.style.display = 'none';
+            video.src = `/media?path=${encodeURIComponent(item.path)}`;
+            video.volume = document.getElementById('previewVolume').value;
+            video.play();
+            document.getElementById('btnPlayPause').innerText = '⏸';
+            renderGallery();
+        }
+
+        async function importMedia() {
+            try {
+                const res = await fetch('/api/import', { method: 'POST' });
+                const item = await res.json();
+                if (item && item.id) {
+                    await fetchGallery();
+                    selectItem(item);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function deleteItem(e, id) {
+            e.stopPropagation();
+            if (confirm("Remove this wallpaper from NŌR Gallery?")) {
+                await fetch(`/api/delete?id=${id}`, { method: 'POST' });
+                await fetchGallery();
+                if (selectedItem && selectedItem.id === id) {
+                    selectedItem = items[0] || null;
+                    if (selectedItem) selectItem(selectedItem);
+                    else {
+                        video.pause();
+                        video.src = '';
+                        placeholder.style.display = 'flex';
+                        document.getElementById('selectedTitle').innerText = 'No Media Selected';
+                    }
+                }
+            }
+        }
+
+        async function setAsDesktop() {
+            if (!selectedItem) {
+                alert("Please select a wallpaper from the gallery first.");
+                return;
+            }
+            await fetch(`/api/set-desktop?id=${selectedItem.id}`, { method: 'POST' });
+            await fetchStatus();
+            await fetchGallery();
+        }
+
+        async function toggleDesktopPause() {
+            if (!isDesktopActive) return;
+            if (isDesktopPaused) {
+                await fetch('/api/resume', { method: 'POST' });
+            } else {
+                await fetch('/api/pause', { method: 'POST' });
+            }
+            await fetchStatus();
+        }
+
+        async function stopDesktop() {
+            await fetch('/api/stop', { method: 'POST' });
+            await fetchStatus();
+            await fetchGallery();
+        }
+
+        async function setDesktopVolume(val) {
+            await fetch(`/api/volume?val=${val}`, { method: 'POST' });
+        }
+
+        async function updateSettings() {
+            const fs = document.getElementById('chkFullscreen').checked;
+            const startup = document.getElementById('chkStartup').checked;
+            await fetch(`/api/settings?fullscreen=${fs}&startup=${startup}`, { method: 'POST' });
+        }
+
+        function togglePreviewPlay() {
+            if (video.paused) {
+                video.play();
+                document.getElementById('btnPlayPause').innerText = '⏸';
+            } else {
+                video.pause();
+                document.getElementById('btnPlayPause').innerText = '▶';
+            }
+        }
+
+        function togglePreviewMute() {
+            video.muted = !video.muted;
+            document.getElementById('btnPreviewMute').innerText = video.muted ? '🔇' : '🔊';
+        }
+
+        function setPreviewVolume(val) {
+            video.volume = val;
+            video.muted = false;
+            document.getElementById('btnPreviewMute').innerText = '🔊';
+        }
+
+        function onScrub(val) {
+            if (video.duration) {
+                video.currentTime = (val / 100) * video.duration;
+            }
+        }
+
+        video.ontimeupdate = () => {
+            if (video.duration) {
+                scrubber.value = (video.currentTime / video.duration) * 100;
+                timeLabel.innerText = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+            }
+        };
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function updateStatusUI() {
+            const dot = document.getElementById('statusDot');
+            const txt = document.getElementById('statusText');
+            const btnPause = document.getElementById('btnPauseDesktop');
+
+            if (isDesktopActive) {
+                if (isDesktopPaused) {
+                    dot.className = 'status-dot paused';
+                    txt.innerText = 'Desktop: Paused';
+                    btnPause.innerText = '▶ Resume Desktop';
+                } else {
+                    dot.className = 'status-dot active';
+                    txt.innerText = 'Desktop: Active (Live)';
+                    btnPause.innerText = '⏸ Pause Desktop';
+                }
+            } else {
+                dot.className = 'status-dot';
+                txt.innerText = 'Desktop: Idle';
+                btnPause.innerText = '⏸ Pause Desktop';
+            }
+        }
+
+        // Init
+        fetchGallery();
+        fetchStatus();
+        setInterval(fetchStatus, 3000);
+    </script>
+</body>
+</html>
+
