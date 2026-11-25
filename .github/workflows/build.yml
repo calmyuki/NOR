@@ -27,7 +27,7 @@ jobs:
       - name: Build Debug configuration
         run: |
           xcodebuild \
-            -project "Wallpaper engine.xcodeproj" \
+            -project "macOS/Wallpaper engine.xcodeproj" \
             -scheme "Wallpaper engine" \
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
@@ -38,7 +38,7 @@ jobs:
       - name: Build Release configuration
         run: |
           xcodebuild \
-            -project "Wallpaper engine.xcodeproj" \
+            -project "macOS/Wallpaper engine.xcodeproj" \
             -scheme "Wallpaper engine" \
             -configuration Release \
             CODE_SIGN_IDENTITY="" \
